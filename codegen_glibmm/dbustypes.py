@@ -346,6 +346,20 @@ class Interface:
         self.properties = []
         self.annotations = []
 
+    def unique_return_types(self):
+        # Helper to create a unique list of return types
+        class CompWrap(object):
+            def __init__(self, signature, args):
+                self.signature, self.args = signature, args
+            def __eq__(self, other):
+                return self.signature == other.signature
+            def __hash__(self):
+                return hash(self.signature)
+
+        args = [CompWrap(''.join([arg.cpptype_out for arg in m.out_args]), m.out_args) for m in self.methods]
+        return [x.args for x in list(set(args))]
+        #return [self.methods[0].out_args, self.methods[0].out_args + self.methods[0].out_args]
+
     def post_process(self, interface_prefix, c_namespace):
         if len(c_namespace) > 0:
             if utils.is_ugly_case(c_namespace):
