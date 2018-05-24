@@ -356,9 +356,12 @@ class Interface:
             def __hash__(self):
                 return hash(self.signature)
 
-        args = [CompWrap(''.join([arg.cpptype_out for arg in m.out_args]), m.out_args) for m in self.methods]
-        return [x.args for x in list(set(args))]
-        #return [self.methods[0].out_args, self.methods[0].out_args + self.methods[0].out_args]
+        args = {}
+        for m in self.methods:
+            method_signature = ''.join([arg.cpptype_out for arg in m.out_args])
+            args[method_signature] = m.out_args
+
+        return args.values()
 
     def post_process(self, interface_prefix, c_namespace):
         if len(c_namespace) > 0:
