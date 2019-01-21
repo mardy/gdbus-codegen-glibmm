@@ -34,7 +34,7 @@ void {{ class_name_with_namespace }}::{{ method.camel_name }}(
     {%- endfor -%});
     {% endif %}
 
-    m_proxy->call("{{ method.name }}", callback, cancellable, base);
+    call("{{ method.name }}", callback, cancellable, base);
 }
 
 {% endif %}
@@ -45,7 +45,7 @@ void {{ class_name_with_namespace }}::{{ method.camel_name }}_finish(
     const Glib::RefPtr<Gio::AsyncResult> &result)
 {
     Glib::VariantContainerBase wrapped;
-    wrapped = m_proxy->call_finish(result);
+    wrapped = call_finish(result);
     {% for arg in method.out_args %}
 
     {{ arg.cppvalue_get("out_" + arg.name, loop.index0|string, interface.cpp_class_name) | indent(1) }}
@@ -57,10 +57,10 @@ void {{ class_name_with_namespace }}::{{ method.camel_name }}_finish(
 {% if prop.readable %}
 {{ prop.cpptype_out }} {{ class_name_with_namespace }}::{{ prop.name }}_get()
 {
-    std::vector<Glib::ustring> props = m_proxy->get_cached_property_names();
+    std::vector<Glib::ustring> props = get_cached_property_names();
     Glib::Variant<{{ prop.variant_type }}> b;
     if (std::find(props.begin(), props.end(), "{{ prop.name }}") != props.end()) {
-        m_proxy->get_cached_property(b, "{{ prop.name }}");
+        get_cached_property(b, "{{ prop.name }}");
     } else {
         g_print("Todo: lookup value\n");
     }
@@ -77,7 +77,7 @@ void {{ class_name_with_namespace }}::{{ prop.name }}_set({{ prop.cpptype_in }} 
     paramsVec.push_back(Glib::Variant<Glib::ustring>::create("{{ prop.name }}"));
     paramsVec.push_back(Glib::Variant<Glib::VariantBase>::create(Glib::Variant<{{ prop.variant_type }}>::create({{ prop.cpptype_to_dbus }}(value))));
     Glib::VariantContainerBase params = Glib::VariantContainerBase::create_tuple(paramsVec);
-    m_proxy->call("org.freedesktop.DBus.Properties.Set", cb, params);
+    call("org.freedesktop.DBus.Properties.Set", cb, params);
 }
 
 void {{ class_name_with_namespace }}::{{ prop.name }}_set_finish(const Glib::RefPtr<Gio::AsyncResult>& res) {
@@ -141,7 +141,7 @@ Glib::RefPtr<{{ class_name_with_namespace }}> {{ class_name_with_namespace }}::c
     Glib::RefPtr<Gio::DBus::Proxy> proxy =
         Gio::DBus::Proxy::create_for_bus_finish(result);
     {{ class_name_with_namespace }} *p =
-        new {{ class_name_with_namespace }}(proxy);
+        new {{ class_name_with_namespace }}(std::move(*proxy.release()));
     return Glib::RefPtr<{{ class_name_with_namespace }}>(p);
 }
 {%- endfor %}

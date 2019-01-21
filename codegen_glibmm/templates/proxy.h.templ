@@ -10,7 +10,7 @@
 namespace {{ namespace }} {
 {% endfor %}
 
-class {{ interface.cpp_class_name }} : public Glib::ObjectBase {
+class {{ interface.cpp_class_name }} : public Gio::DBus::Proxy {
 public:
     static void createForBus(Gio::DBus::BusType busType,
                              Gio::DBus::ProxyFlags proxyFlags,
@@ -59,7 +59,7 @@ public:
         base = Glib::VariantContainerBase::create_tuple(params);
         {% endif %}
 
-        m_proxy->call( "{{ method.name }}", callback, cancellable, base);
+        call( "{{ method.name }}", callback, cancellable, base);
     }
     {% else %}
         const Gio::SlotAsyncReady &slot,
@@ -96,13 +96,9 @@ public:
                        const Glib::ustring &signal_name,
                        const Glib::VariantContainerBase &parameters);
 
-protected:
-    Glib::RefPtr<Gio::DBus::Proxy> m_proxy;
-
 private:
-    {{ interface.cpp_class_name }}(Glib::RefPtr<Gio::DBus::Proxy> proxy): Glib::ObjectBase() {
-        this->m_proxy = proxy;
-        this->m_proxy->signal_signal().connect(sigc::mem_fun(this, &{{ interface.cpp_class_name }}::handle_signal));
+    {{ interface.cpp_class_name }}(Gio::DBus::Proxy &&proxy): Gio::DBus::Proxy(std::move(proxy)) {
+        signal_signal().connect(sigc::mem_fun(this, &{{ interface.cpp_class_name }}::handle_signal));
     }
 };
 
